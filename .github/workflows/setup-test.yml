@@ -10,6 +10,8 @@ jobs:
   lint:
     name: Lint script
     runs-on: macos-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
 
     steps:
       - uses: actions/checkout@v4
@@ -18,7 +20,7 @@ jobs:
         run: bash -n setup-dev-machine.sh
 
       - name: Install ShellCheck
-        run: brew install shellcheck
+        run: command -v shellcheck || brew install shellcheck
 
       - name: Run ShellCheck
         run: shellcheck setup-dev-machine.sh
@@ -27,6 +29,8 @@ jobs:
     name: Dry run setup
     runs-on: macos-latest
     needs: lint
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
 
     steps:
       - uses: actions/checkout@v4
@@ -34,10 +38,12 @@ jobs:
       - name: Run setup script (dry run)
         run: bash setup-dev-machine.sh --dry-run
 
-  install:
-    name: Run actual setup
+  install-and-verify:
+    name: Install and verify installation
     runs-on: macos-latest
     needs: dry-run
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
 
     steps:
       - uses: actions/checkout@v4
@@ -45,19 +51,13 @@ jobs:
       - name: Run setup script
         run: bash setup-dev-machine.sh
 
-  verify:
-    name: Verify installation
-    runs-on: macos-latest
-    needs: install
-
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Verify tools
         run: |
           for cmd in eza rg lazygit starship zoxide; do
             if ! command -v "$cmd" >/dev/null 2>&1; then
-              echo "$cmd missing"
+              echo "ERROR: $cmd not installed"
+              which brew || true
+              brew list || true
               exit 1
             fi
           done
@@ -68,9 +68,7 @@ jobs:
           test -L ~/.config/ghostty/config
 
       - name: Test zsh config
-        run: |
-          zsh -c "set -e; source ~/.zshrc"
+        run: zsh -i -c "source ~/.zshrc"
 
       - name: Test starship
-        run: |
-          starship explain
+        run: starship explain
