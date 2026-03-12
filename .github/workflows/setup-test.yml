@@ -1,0 +1,52 @@
+name: Test Dev Setup Script
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-setup:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax check
+        run: bash -n setup-dev-machine.sh
+
+      - name: Install ShellCheck
+        run: brew install shellcheck
+
+      - name: Lint script
+        run: shellcheck setup-dev-machine.sh
+
+      - name: Run setup script (dry run)
+        run: bash setup-dev-machine.sh --dry-run
+
+      - name: Run setup script (actual)
+        run: bash setup-dev-machine.sh
+
+      - name: Verify tools
+        run: |
+          for cmd in eza rg lazygit starship zoxide; do
+            if ! command -v $cmd >/dev/null 2>&1; then
+              echo "$cmd missing"
+              exit 1
+            fi
+          done
+
+      - name: Verify symlinks
+        run: |
+          test -L ~/.config/starship.toml
+          test -L ~/.config/ghostty/config
+
+      - name: Test zsh config
+        run: |
+          zsh -c "set -e; source ~/.zshrc"
+
+      - name: Test starship
+        run: |
+          starship explain
