@@ -69,7 +69,10 @@ if ! command -v brew &> /dev/null; then
   if [ "$DRY_RUN" = true ]; then
     echo '[DRY RUN] append brew shellenv to ~/.zprofile'
   else
-    echo 'eval "$($(which brew) shellenv)"' >> ~/.zprofile
+    if ! grep -q 'brew shellenv' ~/.zprofile; then
+      # shellcheck disable=SC2016
+      echo 'eval "$(brew shellenv)"' >> ~/.zprofile
+    fi
   fi
 fi
 
