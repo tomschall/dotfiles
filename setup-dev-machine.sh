@@ -20,7 +20,7 @@ echo "-------------------------------------"
 
 run() {
   if [ "$DRY_RUN" = true ]; then
-    echo "[DRY RUN] $@"
+    echo "[DRY RUN]" "$@"
   else
     "$@"
   fi
@@ -69,7 +69,7 @@ if ! command -v brew &> /dev/null; then
   if [ "$DRY_RUN" = true ]; then
     echo '[DRY RUN] append brew shellenv to ~/.zprofile'
   else
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+    echo 'eval "$($(which brew) shellenv)"' >> ~/.zprofile
   fi
 fi
 
