@@ -2,13 +2,13 @@ name: Test Dev Setup Script
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
 jobs:
-  test-setup:
+  lint:
+    name: Lint script
     runs-on: macos-latest
 
     steps:
@@ -20,19 +20,43 @@ jobs:
       - name: Install ShellCheck
         run: brew install shellcheck
 
-      - name: Lint script
+      - name: Run ShellCheck
         run: shellcheck setup-dev-machine.sh
+
+  dry-run:
+    name: Dry run setup
+    runs-on: macos-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Run setup script (dry run)
         run: bash setup-dev-machine.sh --dry-run
 
-      - name: Run setup script (actual)
+  install:
+    name: Run actual setup
+    runs-on: macos-latest
+    needs: dry-run
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run setup script
         run: bash setup-dev-machine.sh
+
+  verify:
+    name: Verify installation
+    runs-on: macos-latest
+    needs: install
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Verify tools
         run: |
           for cmd in eza rg lazygit starship zoxide; do
-            if ! command -v $cmd >/dev/null 2>&1; then
+            if ! command -v "$cmd" >/dev/null 2>&1; then
               echo "$cmd missing"
               exit 1
             fi
