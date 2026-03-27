@@ -44,6 +44,17 @@ install_cask_if_missing() {
   fi
 }
 
+backup_config() {
+  src="$1"
+  timestamp=$(date +%Y%m%d-%H%M%S)
+  dst="${2:-$src.bak-$timestamp}"
+
+  if [ -e "$src" ]; then
+    echo "Backing up $src → $dst"
+    run cp -a "$src" "$dst"
+  fi
+}
+
 safe_link() {
   src="$1"
   dst="$2"
@@ -128,6 +139,8 @@ install_if_missing pyenv
 install_if_missing btop
 install_if_missing htop
 install_if_missing dust
+install_if_missing luarocks
+install_if_missing neovim
 
 # ------------------------------------------------
 
@@ -145,7 +158,11 @@ install_cask_if_missing font-jetbrains-mono-nerd-font
 # ------------------------------------------------
 
 if [ ! -f ~/.fzf.zsh ]; then
-  run "$(brew --prefix)/opt/fzf/install" --all
+  if [ "$DRY_RUN" = false ]; then
+    "$(brew --prefix)/opt/fzf/install" --all
+  else
+    echo "[DRY RUN] fzf install"
+  fi
 fi
 
 # ------------------------------------------------
@@ -172,6 +189,18 @@ fi
 run mkdir -p ~/.config
 run mkdir -p ~/.config/ghostty
 
+
+# ------------------------------------------------
+
+# Backup existing configs
+
+# ------------------------------------------------
+
+echo "Backing up existing configs..."
+backup_config ~/.zshrc
+backup_config ~/.config
+
+
 # ------------------------------------------------
 
 # Link configs
@@ -179,10 +208,10 @@ run mkdir -p ~/.config/ghostty
 # ------------------------------------------------
 
 echo "Linking configs..."
-
 safe_link "$DOTFILES_DIR/zsh/.zshrc" ~/.zshrc
 safe_link "$DOTFILES_DIR/.config/starship.toml" ~/.config/starship.toml
 safe_link "$DOTFILES_DIR/.config/ghostty/config" ~/.config/ghostty/config
+safe_link "$DOTFILES_DIR/.config/nvim" ~/.config/nvim
 
 # ------------------------------------------------
 

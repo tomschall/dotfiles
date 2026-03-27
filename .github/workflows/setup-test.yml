@@ -48,8 +48,61 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare existing configs (trigger backup)
+        run: |
+          mkdir -p ~/.config/ghostty
+          mkdir -p ~/.config/starship
+          mkdir -p ~/.config/nvim
+
+          echo "original ghostty config" > ~/.config/ghostty/config
+          echo "original starship config" > ~/.config/starship/starship.toml
+          echo "original nvim config" > ~/.config/nvim/init.lua
+          echo "original zshrc" > ~/.zshrc
+
       - name: Run setup script
         run: bash setup-dev-machine.sh
+
+      - name: Verify backups
+        run: |
+          ls -la ~
+
+          # check zshrc backup exists
+          if ! compgen -G ~/.zshrc.bak-* > /dev/null; then
+            echo "ERROR: zshrc backup not created"
+            exit 1
+          fi
+
+          # check config backup exists
+          if ! compgen -G ~/.config.bak-* > /dev/null; then
+            echo "ERROR: config backup not created"
+            exit 1
+          fi
+
+      - name: Verify backup content
+        run: |
+          BACKUP_FILE=$(ls -t ~/.zshrc.bak-* | head -n1)
+
+          if [ -z "$BACKUP_FILE" ]; then
+            echo "ERROR: No backup file found"
+            exit 1
+          fi
+
+          if ! grep -q "original zshrc" "$BACKUP_FILE"; then
+            echo "ERROR: Backup content incorrect"
+            exit 1
+          fi
+      
+      - name: Verify config backup content
+        run: |
+          BACKUP_DIR=$(ls -td ~/.config.bak-* | head -n1)
+          if [ -z "$BACKUP_DIR" ]; then
+            echo "ERROR: No config backup found"
+            exit 1
+          fi
+
+          grep -q "original ghostty config" "$BACKUP_DIR/ghostty/config"
+          grep -q "original starship config" "$BACKUP_DIR/starship/starship.toml"
+          grep -q "original nvim config" "$BACKUP_DIR/nvim/init.lua"
 
       - name: Verify tools
         run: |
@@ -66,6 +119,8 @@ jobs:
         run: |
           test -L ~/.config/starship.toml
           test -L ~/.config/ghostty/config
+          test -L ~/.config/nvim
+          test -L ~/.zshrc
 
       - name: Test zsh config
         run: zsh -i -c "source ~/.zshrc"
