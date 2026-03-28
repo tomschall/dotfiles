@@ -101,7 +101,7 @@ jobs:
           fi
 
           grep -q "original ghostty config" "$BACKUP_DIR/ghostty/config"
-          grep -q "original starship config" "$BACKUP_DIR/starship/starship.toml"
+          grep -q "original starship config" "$BACKUP_DIR/starship.toml"
           grep -q "original nvim config" "$BACKUP_DIR/nvim/init.lua"
 
       - name: Verify tools
