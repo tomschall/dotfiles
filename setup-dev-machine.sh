@@ -59,11 +59,17 @@ safe_link() {
   src="$1"
   dst="$2"
 
-  if [ -e "$dst" ] && [ ! -L "$dst" ]; then
-    echo "Skipping $dst (already exists)"
-  else
-    run ln -sf "$src" "$dst"
+  if [ ! -e "$src" ]; then
+    echo "ERROR: source does not exist: $src"
+    exit 1
   fi
+
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    echo "Replacing $dst"
+    run rm -rf "$dst"
+  fi
+
+  run ln -s "$src" "$dst"
 }
 
 # ------------------------------------------------
