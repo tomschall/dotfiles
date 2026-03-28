@@ -55,7 +55,7 @@ jobs:
           mkdir -p ~/.config/nvim
 
           echo "original ghostty config" > ~/.config/ghostty/config
-          echo "original starship config" > ~/.config/starship/starship.toml
+          echo "original starship config" > ~/.config/starship.toml
           echo "original nvim config" > ~/.config/nvim/init.lua
           echo "original zshrc" > ~/.zshrc
 
